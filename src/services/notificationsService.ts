@@ -29,20 +29,52 @@ export async function markAllAsRead(userId: string) {
   if (error) throw error;
 }
 
-// Realtime subscription — calls onInsert for every new notification
-// row belonging to this user, as it happens, no polling. Returns an
-// unsubscribe function.
+// Realtime subscription — calls onInsert for every new notification row
+// belonging to this user, as it happens, no polling. Returns an unsubscribe
+// function.
+//
+// IMPORTANT: Supabase's realtime client throws if you open a second
+// subscription on the same channel topic while one is already active
+// (e.g. the layout renders a notification bell for both the mobile top
+// bar and the desktop bar — both stay mounted at once, just hidden with
+// CSS, not unmounted). To make that safe, this keeps ONE real channel per
+// userId and fans its events out to every caller; the channel itself is
+// only opened on the first subscriber and only closed once the last one
+// unsubscribes.
+const activeChannels: Record<
+  string,
+  { channel: ReturnType<typeof supabase.channel>; listeners: Set<(n: AppNotification) => void> }
+> = {};
+
 export function subscribeToNotifications(userId: string, onInsert: (n: AppNotification) => void) {
-  const channel = supabase
-    .channel(`notifications:${userId}`)
-    .on(
-      "postgres_changes",
-      { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${userId}` },
-      (payload) => onInsert(payload.new as AppNotification)
-    )
-    .subscribe();
+  let entry = activeChannels[userId];
+
+  if (!entry) {
+    const listeners = new Set<(n: AppNotification) => void>();
+    const channel = supabase
+      .channel(`notifications:${userId}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${userId}` },
+        (payload) => {
+          const row = payload.new as AppNotification;
+          listeners.forEach((fn) => fn(row));
+        }
+      )
+      .subscribe();
+    entry = { channel, listeners };
+    activeChannels[userId] = entry;
+  }
+
+  entry.listeners.add(onInsert);
 
   return () => {
-    supabase.removeChannel(channel);
+    const e = activeChannels[userId];
+    if (!e) return;
+    e.listeners.delete(onInsert);
+    if (e.listeners.size === 0) {
+      supabase.removeChannel(e.channel);
+      delete activeChannels[userId];
+    }
   };
 }

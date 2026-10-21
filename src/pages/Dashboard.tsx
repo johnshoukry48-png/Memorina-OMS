@@ -27,6 +27,7 @@ export default function Dashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [summary, setSummary] = useState<TodaySummary | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isAdminOrOM) return;
@@ -34,6 +35,10 @@ export default function Dashboard() {
       .then(([s, t]) => {
         setStats(s);
         setSummary(t);
+      })
+      .catch((err) => {
+        console.error("Dashboard load failed:", err);
+        setLoadError(err?.message || "تعذر تحميل بيانات لوحة التحكم.");
       })
       .finally(() => setLoading(false));
   }, [isAdminOrOM]);
@@ -50,6 +55,10 @@ export default function Dashboard() {
           <p className="font-semibold mb-1">مهامي</p>
           <p className="text-gray-500 text-sm">عرض المهام المتاحة ومهامك الحالية</p>
         </Link>
+      ) : loadError ? (
+        <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 text-sm max-w-xl">
+          تعذر تحميل بيانات لوحة التحكم: {loadError}
+        </div>
       ) : loading || !stats || !summary ? (
         <p className="text-gray-400">جارٍ التحميل...</p>
       ) : (
