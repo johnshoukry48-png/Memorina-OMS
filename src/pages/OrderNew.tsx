@@ -152,7 +152,7 @@ export default function OrderNew() {
           </div>
         </div>
 
-        <button disabled={saving} className="w-full bg-gray-900 text-white rounded-lg py-2.5 font-medium disabled:opacity-50">
+        <button disabled={saving} className="w-full bg-memorina-teal text-white rounded-lg py-2.5 font-medium disabled:opacity-50">
           {saving ? "جارٍ الحفظ..." : "حفظ الطلب"}
         </button>
       </form>

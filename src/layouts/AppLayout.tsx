@@ -38,10 +38,10 @@ export default function AppLayout() {
   ];
 
   const desktopLinkClass = ({ isActive }: { isActive: boolean }) =>
-    `block rounded-lg px-3 py-2 text-sm ${isActive ? "bg-gray-900 text-white" : "text-gray-700 hover:bg-gray-100"}`;
+    `block rounded-lg px-3 py-2 text-sm ${isActive ? "bg-memorina-teal text-white" : "text-gray-700 hover:bg-gray-100"}`;
 
   const mobileLinkClass = ({ isActive }: { isActive: boolean }) =>
-    `flex flex-col items-center justify-center flex-1 py-2 text-xs gap-0.5 ${isActive ? "text-gray-900 font-medium" : "text-gray-400"}`;
+    `flex flex-col items-center justify-center flex-1 py-2 text-xs gap-0.5 ${isActive ? "text-memorina-teal font-medium" : "text-gray-400"}`;
 
   return (
     <div className="min-h-screen">
@@ -49,7 +49,7 @@ export default function AppLayout() {
       <aside className="hidden sm:flex sm:flex-col sm:w-56 sm:fixed sm:inset-y-0 sm:right-0 bg-white border-l border-gray-100 p-4 justify-between">
         <div className="flex flex-col gap-1 w-full">
           <div className="mb-4">
-            <p className="font-bold text-lg">ميمورينا</p>
+            <p className="font-bold text-lg text-memorina-teal">Memorina</p>
             <p className="text-xs text-gray-500">{profile?.role ? ROLE_LABELS_AR[profile.role] : ""}</p>
           </div>
           {navItems.map((item) => (
@@ -63,7 +63,7 @@ export default function AppLayout() {
 
       {/* Mobile top bar */}
       <div className="mobile-safe-top sm:hidden sticky top-0 z-10 flex items-center justify-between bg-white border-b border-gray-100 px-4 py-3">
-        <span className="font-bold">ميمورينا</span>
+        <span className="font-bold text-memorina-teal">Memorina</span>
         <div className="flex items-center gap-1">
           <NotificationBell />
           <button onClick={signOut} className="text-xs text-gray-500 px-2 py-1">خروج</button>

@@ -102,7 +102,7 @@ export function OrderTimeline({ orderId }: { orderId: string }) {
           placeholder="اكتب تعليقًا..."
           className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"
         />
-        <button disabled={posting} className="bg-gray-900 text-white rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-50">
+        <button disabled={posting} className="bg-memorina-teal text-white rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-50">
           إرسال
         </button>
       </form>

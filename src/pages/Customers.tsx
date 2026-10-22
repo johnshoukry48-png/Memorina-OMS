@@ -52,7 +52,7 @@ export default function Customers() {
         <h1 className="text-xl font-bold">العملاء</h1>
         <button
           onClick={() => setShowForm((s) => !s)}
-          className="bg-gray-900 text-white rounded-lg px-4 py-2 text-sm font-medium"
+          className="bg-memorina-teal text-white rounded-lg px-4 py-2 text-sm font-medium"
         >
           {showForm ? "إلغاء" : "+ عميل جديد"}
         </button>
@@ -66,7 +66,7 @@ export default function Customers() {
           <input placeholder="رقم هاتف إضافي" value={form.secondary_phone} onChange={(e) => setForm({ ...form, secondary_phone: e.target.value })} className="rounded-lg border border-gray-300 px-3 py-2" />
           <input placeholder="العنوان" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} className="rounded-lg border border-gray-300 px-3 py-2" />
           <textarea placeholder="ملاحظات" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className="sm:col-span-2 rounded-lg border border-gray-300 px-3 py-2" />
-          <button disabled={saving} className="sm:col-span-2 bg-gray-900 text-white rounded-lg py-2.5 font-medium disabled:opacity-50">
+          <button disabled={saving} className="sm:col-span-2 bg-memorina-teal text-white rounded-lg py-2.5 font-medium disabled:opacity-50">
             {saving ? "جارٍ الحفظ..." : "حفظ العميل"}
           </button>
         </form>

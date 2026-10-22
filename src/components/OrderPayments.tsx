@@ -72,7 +72,7 @@ export function OrderPayments({ orderId, onPaymentAdded }: { orderId: string; on
           placeholder="ملاحظات (اختياري)" value={notes} onChange={(e) => setNotes(e.target.value)}
           className="flex-1 min-w-[120px] rounded-lg border border-gray-300 px-2 py-1.5 text-sm"
         />
-        <button disabled={saving} className="bg-gray-900 text-white rounded-lg px-4 py-1.5 text-sm font-medium disabled:opacity-50">
+        <button disabled={saving} className="bg-memorina-teal text-white rounded-lg px-4 py-1.5 text-sm font-medium disabled:opacity-50">
           {saving ? "..." : "تسجيل الدفعة"}
         </button>
       </form>

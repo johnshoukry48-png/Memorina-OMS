@@ -27,7 +27,7 @@ export default function Orders() {
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-xl font-bold">الطلبات</h1>
-        <Link to="/orders/new" className="bg-gray-900 text-white rounded-lg px-4 py-2 text-sm font-medium">
+        <Link to="/orders/new" className="bg-memorina-teal text-white rounded-lg px-4 py-2 text-sm font-medium">
           + طلب جديد
         </Link>
       </div>

@@ -44,12 +44,12 @@ export default function ForgotPassword() {
               <span className="block text-sm text-gray-700 mb-1">البريد الإلكتروني</span>
               <input
                 type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-800"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-memorina-teal"
               />
             </label>
             <button
               type="submit" disabled={submitting}
-              className="w-full bg-gray-900 text-white rounded-lg py-2.5 font-medium disabled:opacity-50"
+              className="w-full bg-memorina-teal text-white rounded-lg py-2.5 font-medium disabled:opacity-50"
             >
               {submitting ? "جارٍ الإرسال..." : "إرسال رابط إعادة التعيين"}
             </button>

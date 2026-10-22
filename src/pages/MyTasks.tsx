@@ -38,8 +38,11 @@ export default function MyTasks() {
     }
   }
 
-  const available = orders.filter((o) => !o.assigned_user_id);
-  const mine = orders.filter((o) => o.assigned_user_id === profile?.id);
+  // status === 'active' excludes orders that were cancelled or delivered
+  // while still carrying your assignment — without this check, a cancelled
+  // order you once held kept showing up here forever.
+  const available = orders.filter((o) => !o.assigned_user_id && o.status === "active");
+  const mine = orders.filter((o) => o.assigned_user_id === profile?.id && o.status === "active");
 
   return (
     <div className="p-6">
@@ -100,7 +103,7 @@ export default function MyTasks() {
                 <button
                   onClick={() => handleClaim(o.id)}
                   disabled={claimingId === o.id}
-                  className="w-full bg-gray-900 text-white rounded-lg py-2 text-sm font-medium disabled:opacity-50"
+                  className="w-full bg-memorina-teal text-white rounded-lg py-2 text-sm font-medium disabled:opacity-50"
                 >
                   {claimingId === o.id ? "جارٍ الاستلام..." : "استلام المهمة"}
                 </button>

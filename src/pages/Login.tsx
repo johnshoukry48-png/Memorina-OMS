@@ -29,7 +29,7 @@ export default function Login() {
         onSubmit={handleSubmit}
         className="w-full max-w-sm bg-white rounded-2xl shadow-sm border border-gray-100 p-8"
       >
-        <h1 className="text-2xl font-bold text-center mb-1">ميمورينا</h1>
+        <h1 className="text-2xl font-bold text-center mb-1 text-memorina-teal">Memorina</h1>
         <p className="text-center text-gray-500 mb-6">تسجيل الدخول لإدارة الطلبات</p>
 
         {error && (
@@ -45,7 +45,7 @@ export default function Login() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-800"
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-memorina-teal"
           />
         </label>
 
@@ -56,14 +56,14 @@ export default function Login() {
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-800"
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-memorina-teal"
           />
         </label>
 
         <button
           type="submit"
           disabled={submitting}
-          className="w-full bg-gray-900 text-white rounded-lg py-2.5 font-medium disabled:opacity-50"
+          className="w-full bg-memorina-teal text-white rounded-lg py-2.5 font-medium disabled:opacity-50"
         >
           {submitting ? "جارٍ الدخول..." : "دخول"}
         </button>

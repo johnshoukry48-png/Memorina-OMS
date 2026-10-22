@@ -106,7 +106,7 @@ export default function OrderDetail() {
         {order.status !== "active" ? (
           <p className="text-gray-500 text-sm">لا توجد إجراءات متاحة — حالة الطلب: {order.status === "completed" ? "مكتمل" : "ملغي"}</p>
         ) : isMyStageUnclaimed ? (
-          <button onClick={handleClaim} disabled={acting} className="bg-gray-900 text-white rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-50">
+          <button onClick={handleClaim} disabled={acting} className="bg-memorina-teal text-white rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-50">
             {acting ? "جارٍ الاستلام..." : "استلام المهمة"}
           </button>
         ) : canAdvance ? (
@@ -116,7 +116,7 @@ export default function OrderDetail() {
                 key={s}
                 onClick={() => handleAdvance(s)}
                 disabled={acting}
-                className="bg-gray-900 text-white rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-50"
+                className="bg-memorina-teal text-white rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-50"
               >
                 نقل إلى: {STAGE_LABEL_AR[s]}
               </button>

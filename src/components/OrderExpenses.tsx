@@ -61,7 +61,7 @@ export function OrderExpenses({ orderId, grandTotal }: { orderId: string; grandT
         <input placeholder="الفئة (طباعة، شحن...)" value={category} onChange={(e) => setCategory(e.target.value)} className="rounded-lg border border-gray-300 px-2 py-1.5 text-sm" />
         <input type="number" min={0} step="0.01" placeholder="المبلغ" value={amount} onChange={(e) => setAmount(e.target.value)} className="w-28 rounded-lg border border-gray-300 px-2 py-1.5 text-sm" />
         <input placeholder="وصف (اختياري)" value={description} onChange={(e) => setDescription(e.target.value)} className="flex-1 min-w-[120px] rounded-lg border border-gray-300 px-2 py-1.5 text-sm" />
-        <button disabled={saving} className="bg-gray-900 text-white rounded-lg px-4 py-1.5 text-sm font-medium disabled:opacity-50">
+        <button disabled={saving} className="bg-memorina-teal text-white rounded-lg px-4 py-1.5 text-sm font-medium disabled:opacity-50">
           {saving ? "..." : "إضافة مصروف"}
         </button>
       </form>

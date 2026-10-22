@@ -55,11 +55,15 @@ export function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute left-0 sm:left-auto sm:right-0 mt-2 w-80 max-w-[85vw] max-h-96 overflow-y-auto bg-white border border-gray-100 rounded-2xl shadow-lg z-20">
+        // Anchored to the LEFT edge of the bell (not "right", regardless of
+        // breakpoint): in this app's RTL layout the bell always sits near
+        // the left edge of its row (sidebar/content is on the right), so
+        // anchoring from the right pushed most of the dropdown off-screen.
+        <div className="absolute left-0 mt-2 w-80 max-w-[85vw] max-h-96 overflow-y-auto bg-white border border-gray-100 rounded-2xl shadow-lg z-20">
           <div className="flex items-center justify-between p-3 border-b border-gray-50">
             <span className="font-semibold text-sm">الإشعارات</span>
             {unreadCount > 0 && (
-              <button onClick={handleMarkAllRead} className="text-xs text-gray-500">تعليم الكل كمقروء</button>
+              <button onClick={handleMarkAllRead} className="text-xs text-memorina-teal">تعليم الكل كمقروء</button>
             )}
           </div>
           {notifications.length === 0 ? (
@@ -67,7 +71,7 @@ export function NotificationBell() {
           ) : (
             <ul className="divide-y divide-gray-50">
               {notifications.map((n) => (
-                <li key={n.id} className={!n.read_at ? "bg-blue-50/40" : ""}>
+                <li key={n.id} className={!n.read_at ? "bg-memorina-teal-light/10" : ""}>
                   {n.order_id ? (
                     <Link
                       to={`/orders/${n.order_id}`}

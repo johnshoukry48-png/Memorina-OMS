@@ -81,7 +81,7 @@ export default function Reports() {
           <span className="block text-gray-600 mb-1">إلى</span>
           <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="rounded-lg border border-gray-300 px-2 py-1.5" />
         </label>
-        <button onClick={load} className="bg-gray-900 text-white rounded-lg px-4 py-1.5 text-sm font-medium">تطبيق</button>
+        <button onClick={load} className="bg-memorina-teal text-white rounded-lg px-4 py-1.5 text-sm font-medium">تطبيق</button>
       </div>
 
       {loading ? (
