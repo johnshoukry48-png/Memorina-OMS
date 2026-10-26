@@ -8,11 +8,13 @@ const ACTION_LABEL_AR: Record<string, (log: AuditLog) => string> = {
   stage_changed: (l) => `تم نقل الطلب إلى مرحلة ${STAGE_AR[l.to_value || ""] || l.to_value}`,
   task_claimed: () => "تم استلام المهمة",
   file_uploaded: (l) => `تم رفع ملف (${CATEGORY_AR[l.to_value || ""] || l.to_value})`,
+  payment_recorded: (l) => `تم تسجيل دفعة (${l.to_value})`,
 };
 
 const STAGE_AR: Record<string, string> = {
   NEW: "جديد", DESIGN: "التصميم", PRINTING: "الطباعة", ASSEMBLY: "التجميع",
-  PACKAGING: "التغليف", SHIPPING: "الشحن", DELIVERED: "تم التسليم", CANCELLED: "ملغي",
+  PACKAGING: "التغليف", SHIPPING: "الشحن", DELIVERED: "تم التسليم",
+  COLLECTED: "تم التحصيل", CANCELLED: "ملغي",
 };
 
 const CATEGORY_AR: Record<string, string> = {

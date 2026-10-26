@@ -41,6 +41,25 @@ export async function uploadFile(orderId: string, category: FileCategory, file: 
   return data as OrderFile;
 }
 
+// A link instead of an uploaded file (e.g. a Google Drive / WeTransfer
+// URL the designer already has). No Storage bytes involved — just a row.
+export async function addFileLink(orderId: string, category: FileCategory, linkUrl: string, label?: string) {
+  const { data: userData } = await supabase.auth.getUser();
+  const { data, error } = await supabase
+    .from("files")
+    .insert({
+      order_id: orderId,
+      category,
+      link_url: linkUrl,
+      file_name: label || linkUrl,
+      uploaded_by: userData.user?.id,
+    })
+    .select()
+    .single();
+  if (error) throw error;
+  return data as OrderFile;
+}
+
 // Signed URL, short-lived — files are private, never public.
 export async function getFileDownloadUrl(storagePath: string) {
   const { data, error } = await supabase.storage

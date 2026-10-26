@@ -11,7 +11,7 @@ import {
 
 const STAGE_LABEL_AR: Record<string, string> = {
   NEW: "جديد", DESIGN: "التصميم", PRINTING: "الطباعة", ASSEMBLY: "التجميع",
-  PACKAGING: "التغليف", SHIPPING: "الشحن", DELIVERED: "تم التسليم",
+  PACKAGING: "التغليف", SHIPPING: "الشحن", DELIVERED: "تم التسليم", COLLECTED: "تم التحصيل",
   completed: "مكتمل", cancelled: "ملغي",
 };
 
@@ -21,18 +21,22 @@ function isoDateOnly(d: Date) {
   return d.toISOString().slice(0, 10);
 }
 
+function startOfMonth(d: Date) {
+  return new Date(d.getFullYear(), d.getMonth(), 1);
+}
+
 export default function Reports() {
   const { profile } = useAuth();
   const isAdmin = profile?.role === "admin";
 
-  const [from, setFrom] = useState(isoDateOnly(new Date(Date.now() - 30 * 24 * 3600 * 1000)));
+  const [from, setFrom] = useState(isoDateOnly(startOfMonth(new Date())));
   const [to, setTo] = useState(isoDateOnly(new Date()));
   const [loading, setLoading] = useState(true);
 
   const [byStatus, setByStatus] = useState<Record<string, number>>({});
   const [byEmployee, setByEmployee] = useState<{ name: string; count: number }[]>([]);
   const [sales, setSales] = useState(0);
-  const [payments, setPayments] = useState<{ total: number; byMethod: Record<string, number> }>({ total: 0, byMethod: {} });
+  const [revenue, setRevenue] = useState<{ total: number; byMethod: Record<string, number> } | null>(null);
   const [outstanding, setOutstanding] = useState(0);
   const [expenses, setExpenses] = useState<{ total: number; byCategory: Record<string, number> } | null>(null);
 
@@ -40,20 +44,19 @@ export default function Reports() {
     setLoading(true);
     const range = { from: `${from}T00:00:00.000Z`, to: `${to}T23:59:59.999Z` };
     try {
-      const [status, employee, salesTotal, paymentsTotal, outstandingTotal] = await Promise.all([
+      const [status, employee, salesTotal, outstandingTotal] = await Promise.all([
         getOrdersByStatus(),
         getOrdersByEmployee(),
         getSalesReport(range),
-        getPaymentsReport(range),
         getOutstandingBalance(),
       ]);
       setByStatus(status);
       setByEmployee(employee);
       setSales(salesTotal);
-      setPayments(paymentsTotal);
       setOutstanding(outstandingTotal);
 
       if (isAdmin) {
+        setRevenue(await getPaymentsReport(range));
         setExpenses(await getExpensesReport(range));
       }
     } finally {
@@ -66,7 +69,7 @@ export default function Reports() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const netResult = expenses ? sales - expenses.total : null;
+  const netResult = isAdmin && revenue && expenses ? revenue.total - expenses.total : null;
 
   return (
     <div className="p-6">
@@ -82,6 +85,7 @@ export default function Reports() {
           <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="rounded-lg border border-gray-300 px-2 py-1.5" />
         </label>
         <button onClick={load} className="bg-memorina-teal text-white rounded-lg px-4 py-1.5 text-sm font-medium">تطبيق</button>
+        <span className="text-xs text-gray-400 self-center">افتراضيًا: الشهر الحالي</span>
       </div>
 
       {loading ? (
@@ -100,14 +104,16 @@ export default function Reports() {
             <p className="text-2xl font-bold">{sales.toFixed(2)} ج.م</p>
           </ReportCard>
 
-          <ReportCard title="المدفوعات (حسب الفترة)">
-            <p className="text-2xl font-bold mb-2">{payments.total.toFixed(2)} ج.م</p>
-            <Table rows={Object.entries(payments.byMethod).map(([k, v]) => [METHOD_AR[k] || k, Number(v).toFixed(2)])} />
-          </ReportCard>
-
           <ReportCard title="الرصيد المستحق">
             <p className="text-2xl font-bold">{outstanding.toFixed(2)} ج.م</p>
           </ReportCard>
+
+          {isAdmin && revenue && (
+            <ReportCard title="الإيرادات (خاص بالمدير)" highlight>
+              <p className="text-2xl font-bold mb-2">{revenue.total.toFixed(2)} ج.م</p>
+              <Table rows={Object.entries(revenue.byMethod).map(([k, v]) => [METHOD_AR[k] || k, Number(v).toFixed(2)])} />
+            </ReportCard>
+          )}
 
           {isAdmin && expenses && (
             <ReportCard title="المصروفات (خاص بالمدير)" highlight>
@@ -117,8 +123,9 @@ export default function Reports() {
           )}
 
           {isAdmin && netResult !== null && (
-            <ReportCard title="صافي الربح (خاص بالمدير)" highlight>
+            <ReportCard title="الأرباح — صافي الربح (خاص بالمدير)" highlight>
               <p className="text-2xl font-bold">{netResult.toFixed(2)} ج.م</p>
+              <p className="text-xs text-gray-500 mt-1">الإيرادات فى الفترة ناقص المصروفات فى نفس الفترة.</p>
             </ReportCard>
           )}
         </div>

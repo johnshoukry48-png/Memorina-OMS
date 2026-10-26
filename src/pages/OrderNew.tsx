@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { listCustomers } from "../services/customersService";
+import { listCustomers, createCustomer } from "../services/customersService";
 import { createOrderWithItems } from "../services/ordersService";
 import type { Customer, NewOrderItemInput } from "../types/database";
 
@@ -9,7 +9,11 @@ const emptyItem: NewOrderItemInput = { name: "", quantity: 1, unit_price: 0, siz
 export default function OrderNew() {
   const navigate = useNavigate();
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [customerMode, setCustomerMode] = useState<"existing" | "new">("existing");
   const [customerId, setCustomerId] = useState("");
+  const [newCustomerName, setNewCustomerName] = useState("");
+  const [newCustomerPhone, setNewCustomerPhone] = useState("");
+  const [newCustomerAddress, setNewCustomerAddress] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [priority, setPriority] = useState("normal");
   const [shippingAddress, setShippingAddress] = useState("");
@@ -41,8 +45,12 @@ export default function OrderNew() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!customerId) {
+    if (customerMode === "existing" && !customerId) {
       setError("اختر العميل أولاً.");
+      return;
+    }
+    if (customerMode === "new" && (!newCustomerName || !newCustomerPhone)) {
+      setError("أدخل اسم ورقم هاتف العميل الجديد.");
       return;
     }
     if (items.length === 0 || items.some((it) => !it.name || it.quantity <= 0)) {
@@ -52,9 +60,19 @@ export default function OrderNew() {
     setSaving(true);
     setError(null);
     try {
+      let finalCustomerId = customerId;
+      if (customerMode === "new") {
+        const created = await createCustomer({
+          name: newCustomerName,
+          phone: newCustomerPhone,
+          address: newCustomerAddress || undefined,
+        });
+        finalCustomerId = created.id;
+      }
+
       const order = await createOrderWithItems({
-        customer_id: customerId,
-        due_date: dueDate || undefined,
+        customer_id: finalCustomerId,
+        due_date: dueDate || undefined, // empty = server defaults to +10 days
         priority,
         shipping_address: shippingAddress || undefined,
         discount,
@@ -78,19 +96,54 @@ export default function OrderNew() {
         {error && <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg p-3">{error}</div>}
 
         <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm grid gap-3 sm:grid-cols-2">
-          <label className="block sm:col-span-2">
-            <span className="block text-sm text-gray-700 mb-1">العميل</span>
-            <select required value={customerId} onChange={(e) => setCustomerId(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2">
-              <option value="">اختر عميلاً</option>
-              {customers.map((c) => (
-                <option key={c.id} value={c.id}>{c.name} — {c.phone}</option>
-              ))}
-            </select>
-          </label>
+          <div className="sm:col-span-2 flex gap-2 mb-1">
+            <button
+              type="button"
+              onClick={() => setCustomerMode("existing")}
+              className={`flex-1 rounded-lg py-2 text-sm font-medium border ${customerMode === "existing" ? "bg-memorina-teal text-white border-memorina-teal" : "border-gray-300 text-gray-600"}`}
+            >
+              عميل موجود
+            </button>
+            <button
+              type="button"
+              onClick={() => setCustomerMode("new")}
+              className={`flex-1 rounded-lg py-2 text-sm font-medium border ${customerMode === "new" ? "bg-memorina-teal text-white border-memorina-teal" : "border-gray-300 text-gray-600"}`}
+            >
+              عميل جديد
+            </button>
+          </div>
+
+          {customerMode === "existing" ? (
+            <label className="block sm:col-span-2">
+              <span className="block text-sm text-gray-700 mb-1">العميل</span>
+              <select required value={customerId} onChange={(e) => setCustomerId(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2">
+                <option value="">اختر عميلاً</option>
+                {customers.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name} — {c.phone}</option>
+                ))}
+              </select>
+            </label>
+          ) : (
+            <>
+              <label className="block">
+                <span className="block text-sm text-gray-700 mb-1">اسم العميل</span>
+                <input required value={newCustomerName} onChange={(e) => setNewCustomerName(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2" />
+              </label>
+              <label className="block">
+                <span className="block text-sm text-gray-700 mb-1">رقم الهاتف</span>
+                <input required value={newCustomerPhone} onChange={(e) => setNewCustomerPhone(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2" />
+              </label>
+              <label className="block sm:col-span-2">
+                <span className="block text-sm text-gray-700 mb-1">العنوان (اختياري)</span>
+                <input value={newCustomerAddress} onChange={(e) => setNewCustomerAddress(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2" />
+              </label>
+            </>
+          )}
 
           <label className="block">
             <span className="block text-sm text-gray-700 mb-1">تاريخ التسليم المطلوب</span>
             <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2" />
+            <span className="block text-xs text-gray-400 mt-1">لو سبته فاضي، هيتحدد تلقائي بعد 10 أيام من النهاردة — وتقدر تعدله في أي وقت.</span>
           </label>
 
           <label className="block">

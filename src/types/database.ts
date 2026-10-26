@@ -40,6 +40,7 @@ export type WorkflowStageCode =
   | "PACKAGING"
   | "SHIPPING"
   | "DELIVERED"
+  | "COLLECTED"
   | "CANCELLED";
 
 export type OrderPriority = "low" | "normal" | "high" | "urgent";
@@ -58,12 +59,6 @@ export interface Order {
   shipping_address: string | null;
   shipping_company: string | null;
   tracking_number: string | null;
-  discount: number;
-  shipping_cost: number;
-  subtotal: number;
-  grand_total: number;
-  total_paid: number;
-  remaining_balance: number;
   notes: string | null;
   created_by: string | null;
   created_at: string;
@@ -71,6 +66,21 @@ export interface Order {
   completed_at: string | null;
   // joined, when requested
   customer?: Customer;
+  // joined, when requested — comes back null/absent for roles without
+  // financial visibility (RLS on order_financials), not an error.
+  financials?: OrderFinancials | null;
+}
+
+// Lives in its own table (order_financials) specifically so RLS can
+// restrict who sees money — see docs/SECURITY_AUDIT.md and migration 010.
+export interface OrderFinancials {
+  order_id: string;
+  discount: number;
+  shipping_cost: number;
+  subtotal: number;
+  grand_total: number;
+  total_paid: number;
+  remaining_balance: number;
 }
 
 export interface OrderItem {
@@ -103,11 +113,21 @@ export interface OrderFile {
   id: string;
   order_id: string;
   category: FileCategory;
-  storage_path: string;
+  storage_path: string | null;
+  link_url: string | null;
   file_name: string;
   uploaded_by: string | null;
   created_at: string;
   uploader?: { full_name: string } | null;
+}
+
+export interface ItemProgress {
+  id: string;
+  order_item_id: string;
+  stage: WorkflowStageCode;
+  completed: boolean;
+  completed_by: string | null;
+  completed_at: string | null;
 }
 
 export interface Comment {

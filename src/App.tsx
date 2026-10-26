@@ -13,6 +13,7 @@ import OrderNew from "./pages/OrderNew";
 import OrderDetail from "./pages/OrderDetail";
 import MyTasks from "./pages/MyTasks";
 import Reports from "./pages/Reports";
+import Expenses from "./pages/Expenses";
 
 export default function App() {
   return (
@@ -74,6 +75,14 @@ export default function App() {
             element={
               <ProtectedRoute allowedRoles={["admin", "order_manager"]}>
                 <Reports />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/expenses"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <Expenses />
               </ProtectedRoute>
             }
           />

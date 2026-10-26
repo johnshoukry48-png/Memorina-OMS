@@ -7,6 +7,7 @@ import {
   markAllAsRead,
   subscribeToNotifications,
 } from "../services/notificationsService";
+import { playNotificationSound } from "../lib/notificationSound";
 import type { AppNotification } from "../types/database";
 
 export function NotificationBell() {
@@ -20,6 +21,7 @@ export function NotificationBell() {
 
     const unsubscribe = subscribeToNotifications(profile.id, (n) => {
       setNotifications((prev) => [n, ...prev]);
+      playNotificationSound();
     });
     return unsubscribe;
   }, [profile?.id]);

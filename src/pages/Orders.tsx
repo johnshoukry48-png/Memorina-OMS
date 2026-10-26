@@ -70,8 +70,8 @@ export default function Orders() {
                   </td>
                   <td className="p-3">{o.customer?.name}</td>
                   <td className="p-3"><StatusBadge stage={o.current_stage} /></td>
-                  <td className="p-3">{o.grand_total.toFixed(2)} ج.م</td>
-                  <td className="p-3">{o.remaining_balance.toFixed(2)} ج.م</td>
+                  <td className="p-3">{o.financials ? `${o.financials.grand_total.toFixed(2)} ج.م` : "—"}</td>
+                  <td className="p-3">{o.financials ? `${o.financials.remaining_balance.toFixed(2)} ج.م` : "—"}</td>
                   <td className="p-3 text-gray-500">
                     {o.due_date ? new Date(o.due_date).toLocaleDateString("ar-EG") : "—"}
                   </td>

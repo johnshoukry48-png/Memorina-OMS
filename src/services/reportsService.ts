@@ -34,11 +34,14 @@ export async function getOrdersByEmployee() {
 export async function getSalesReport(range: ReportRange) {
   const { data, error } = await supabase
     .from("orders")
-    .select("grand_total")
+    .select("order_date, financials:order_financials(grand_total)")
     .gte("order_date", range.from)
     .lte("order_date", range.to);
   if (error) throw error;
-  return (data as any[]).reduce((s, o) => s + Number(o.grand_total), 0);
+  return (data as any[]).reduce((s, o) => {
+    const f = Array.isArray(o.financials) ? o.financials[0] : o.financials;
+    return s + Number(f?.grand_total || 0);
+  }, 0);
 }
 
 export async function getPaymentsReport(range: ReportRange) {
@@ -58,9 +61,15 @@ export async function getPaymentsReport(range: ReportRange) {
 }
 
 export async function getOutstandingBalance() {
-  const { data, error } = await supabase.from("orders").select("remaining_balance").eq("status", "active");
+  const { data, error } = await supabase
+    .from("orders")
+    .select("status, financials:order_financials(remaining_balance)")
+    .eq("status", "active");
   if (error) throw error;
-  return (data as any[]).reduce((s, o) => s + Number(o.remaining_balance), 0);
+  return (data as any[]).reduce((s, o) => {
+    const f = Array.isArray(o.financials) ? o.financials[0] : o.financials;
+    return s + Number(f?.remaining_balance || 0);
+  }, 0);
 }
 
 // Admin-only in practice: RLS on `expenses` returns nothing to anyone else.

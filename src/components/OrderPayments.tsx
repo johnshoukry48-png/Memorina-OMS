@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { listPayments, addPayment } from "../services/paymentsService";
+import { listPayments, addPayment, updatePayment, deletePayment } from "../services/paymentsService";
+import { useAuth } from "../hooks/useAuth";
 import type { Payment, PaymentMethod } from "../types/database";
 
 const METHOD_AR: Record<PaymentMethod, string> = {
@@ -8,7 +9,17 @@ const METHOD_AR: Record<PaymentMethod, string> = {
   VODAFONE_CASH: "فودافون كاش",
 };
 
-export function OrderPayments({ orderId, onPaymentAdded }: { orderId: string; onPaymentAdded?: () => void }) {
+export function OrderPayments({
+  orderId,
+  remainingBalance,
+  onPaymentAdded,
+}: {
+  orderId: string;
+  remainingBalance?: number;
+  onPaymentAdded?: () => void;
+}) {
+  const { profile } = useAuth();
+  const isAdmin = profile?.role === "admin";
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [amount, setAmount] = useState("");
@@ -16,6 +27,8 @@ export function OrderPayments({ orderId, onPaymentAdded }: { orderId: string; on
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editAmount, setEditAmount] = useState("");
 
   async function load() {
     setLoading(true);
@@ -30,6 +43,16 @@ export function OrderPayments({ orderId, onPaymentAdded }: { orderId: string; on
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderId]);
+
+  // Convenience: pre-fill the amount field with whatever's still owed,
+  // e.g. when the customer pays off the rest before delivery — still
+  // editable, just a sensible starting point.
+  useEffect(() => {
+    if (remainingBalance && remainingBalance > 0 && !amount) {
+      setAmount(remainingBalance.toFixed(2));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [remainingBalance]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -50,6 +73,29 @@ export function OrderPayments({ orderId, onPaymentAdded }: { orderId: string; on
       setError(err?.message || "تعذر تسجيل الدفعة.");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleSaveEdit(id: string) {
+    const amt = Number(editAmount);
+    if (!amt || amt <= 0) return;
+    try {
+      await updatePayment(id, { amount: amt });
+      setEditingId(null);
+      await load();
+      onPaymentAdded?.();
+    } catch {
+      setError("تعذر تعديل الدفعة.");
+    }
+  }
+
+  async function handleDelete(id: string) {
+    try {
+      await deletePayment(id);
+      await load();
+      onPaymentAdded?.();
+    } catch {
+      setError("تعذر حذف الدفعة.");
     }
   }
 
@@ -76,6 +122,9 @@ export function OrderPayments({ orderId, onPaymentAdded }: { orderId: string; on
           {saving ? "..." : "تسجيل الدفعة"}
         </button>
       </form>
+      {remainingBalance !== undefined && remainingBalance > 0 && (
+        <p className="text-xs text-gray-400 mb-2">المبلغ معبّأ تلقائيًا بالمتبقي ({remainingBalance.toFixed(2)} ج.م) — عدّله لو الدفعة جزء بس.</p>
+      )}
 
       {error && <div className="mb-2 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg p-2">{error}</div>}
 
@@ -87,14 +136,41 @@ export function OrderPayments({ orderId, onPaymentAdded }: { orderId: string; on
         <ul className="divide-y divide-gray-50 text-sm">
           {payments.map((p) => (
             <li key={p.id} className="py-2 flex items-center justify-between">
-              <div>
-                <span className="font-medium">{p.amount.toFixed(2)} ج.م</span>
-                <span className="text-gray-500"> — {METHOD_AR[p.method]}</span>
-                {p.notes && <span className="text-gray-400"> — {p.notes}</span>}
-              </div>
-              <span className="text-gray-400 text-xs">
-                {new Date(p.created_at).toLocaleDateString("ar-EG")} — {p.recorder?.full_name}
-              </span>
+              {editingId === p.id ? (
+                <div className="flex items-center gap-2 flex-1">
+                  <input
+                    type="number" min={0} step="0.01" value={editAmount}
+                    onChange={(e) => setEditAmount(e.target.value)}
+                    className="w-24 rounded-lg border border-gray-300 px-2 py-1 text-sm"
+                  />
+                  <button onClick={() => handleSaveEdit(p.id)} className="text-memorina-teal text-xs">حفظ</button>
+                  <button onClick={() => setEditingId(null)} className="text-gray-400 text-xs">إلغاء</button>
+                </div>
+              ) : (
+                <>
+                  <div>
+                    <span className="font-medium">{p.amount.toFixed(2)} ج.م</span>
+                    <span className="text-gray-500"> — {METHOD_AR[p.method]}</span>
+                    {p.notes && <span className="text-gray-400"> — {p.notes}</span>}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-400 text-xs">
+                      {new Date(p.created_at).toLocaleDateString("ar-EG")} — {p.recorder?.full_name}
+                    </span>
+                    {isAdmin && (
+                      <>
+                        <button
+                          onClick={() => { setEditingId(p.id); setEditAmount(String(p.amount)); }}
+                          className="text-xs text-gray-500"
+                        >
+                          تعديل
+                        </button>
+                        <button onClick={() => handleDelete(p.id)} className="text-xs text-red-500">حذف</button>
+                      </>
+                    )}
+                  </div>
+                </>
+              )}
             </li>
           ))}
         </ul>

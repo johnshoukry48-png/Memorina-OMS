@@ -24,6 +24,7 @@ export default function AppLayout() {
   const { profile, signOut } = useAuth();
   const canManageOrders = profile?.role === "admin" || profile?.role === "order_manager";
   const isProductionRole = ["designer", "printing", "assembly", "packaging", "shipping"].includes(profile?.role || "");
+  const isAdmin = profile?.role === "admin";
 
   const navItems: NavItem[] = [
     { to: "/", label: "الرئيسية", icon: "🏠", end: true },
@@ -34,6 +35,7 @@ export default function AppLayout() {
           { to: "/reports", label: "التقارير", icon: "📊" },
         ]
       : []),
+    ...(isAdmin ? [{ to: "/expenses", label: "المصروفات", icon: "💰" }] : []),
     ...(isProductionRole ? [{ to: "/my-tasks", label: "مهامي", icon: "✅" }] : []),
   ];
 

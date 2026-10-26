@@ -9,6 +9,7 @@ const STAGE_STYLE: Record<WorkflowStageCode, string> = {
   PACKAGING: "bg-yellow-100 text-yellow-800",
   SHIPPING: "bg-green-100 text-green-800",
   DELIVERED: "bg-emerald-100 text-emerald-900",
+  COLLECTED: "bg-memorina-teal/15 text-memorina-teal",
   CANCELLED: "bg-red-100 text-red-800",
 };
 
@@ -20,6 +21,7 @@ const STAGE_LABEL_AR: Record<WorkflowStageCode, string> = {
   PACKAGING: "التغليف",
   SHIPPING: "الشحن",
   DELIVERED: "تم التسليم",
+  COLLECTED: "تم التحصيل",
   CANCELLED: "ملغي",
 };
 

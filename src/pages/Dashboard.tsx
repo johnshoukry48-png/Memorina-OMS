@@ -18,7 +18,8 @@ const ROLE_LABELS_AR: Record<string, string> = {
 const STAGE_ORDER: WorkflowStageCode[] = ["NEW", "DESIGN", "PRINTING", "ASSEMBLY", "PACKAGING", "SHIPPING"];
 const STAGE_LABEL_AR: Record<WorkflowStageCode, string> = {
   NEW: "جديد", DESIGN: "التصميم", PRINTING: "الطباعة", ASSEMBLY: "التجميع",
-  PACKAGING: "التغليف", SHIPPING: "الشحن", DELIVERED: "تم التسليم", CANCELLED: "ملغي",
+  PACKAGING: "التغليف", SHIPPING: "الشحن", DELIVERED: "تم التسليم",
+  COLLECTED: "تم التحصيل", CANCELLED: "ملغي",
 };
 
 export default function Dashboard() {
@@ -69,6 +70,7 @@ export default function Dashboard() {
               <StatCard key={s} label={STAGE_LABEL_AR[s]} value={stats.byStage[s] || 0} />
             ))}
             <StatCard label="تم التسليم" value={stats.totalDelivered} />
+            <StatCard label="تم التحصيل" value={stats.totalCollected} />
             <StatCard label="طلبات متأخرة" value={stats.overdue.length} highlight={stats.overdue.length > 0} />
           </div>
 

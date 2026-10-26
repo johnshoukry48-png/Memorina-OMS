@@ -23,3 +23,17 @@ export async function addPayment(orderId: string, amount: number, method: Paymen
   if (error) throw error;
   return data as unknown as Payment;
 }
+
+// Admin-only at the RLS level (see migrations 005/008) — for fixing a
+// mistake in a previously recorded payment. Prefer recording a new
+// payment for a genuine additional/remaining payment; editing is for
+// correcting errors, so the history stays trustworthy.
+export async function updatePayment(id: string, patch: Partial<Pick<Payment, "amount" | "method" | "notes">>) {
+  const { error } = await supabase.from("payments").update(patch).eq("id", id);
+  if (error) throw error;
+}
+
+export async function deletePayment(id: string) {
+  const { error } = await supabase.from("payments").delete().eq("id", id);
+  if (error) throw error;
+}
