@@ -3,6 +3,12 @@
 -- links, per-item checklist, direct assignment, collected stage,
 -- standalone expenses, and the money-visibility security fix).
 -- Run AFTER 001 through 009.
+--
+-- SAFE TO RUN MORE THAN ONCE: every step below checks whether it
+-- already happened before doing anything, so re-running this file
+-- after a partial failure (or just to be sure) will not error and
+-- will not duplicate or lose data. If you hit an error on your
+-- first attempt, just run the whole file again from the top.
 -- ============================================================
 
 -- ------------------------------------------------------------
@@ -19,7 +25,7 @@
 -- whoever already could see it — nothing else about order
 -- visibility changes.
 -- ------------------------------------------------------------
-create table public.order_financials (
+create table if not exists public.order_financials (
   order_id          uuid primary key references public.orders(id) on delete cascade,
   discount          numeric(12,2) not null default 0 check (discount >= 0),
   shipping_cost     numeric(12,2) not null default 0 check (shipping_cost >= 0),
@@ -29,8 +35,22 @@ create table public.order_financials (
   remaining_balance numeric(12,2) not null default 0
 );
 
-insert into public.order_financials (order_id, discount, shipping_cost, subtotal, grand_total, total_paid, remaining_balance)
-select id, discount, shipping_cost, subtotal, grand_total, total_paid, remaining_balance from public.orders;
+-- Copy existing money data over, but only for orders that don't
+-- already have a financials row AND only while `orders` still has
+-- the old columns (both true on a fresh run; both false — so this
+-- just does nothing — if this part already completed before).
+do $$
+begin
+  if exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = 'orders' and column_name = 'grand_total'
+  ) then
+    insert into public.order_financials (order_id, discount, shipping_cost, subtotal, grand_total, total_paid, remaining_balance)
+    select o.id, o.discount, o.shipping_cost, o.subtotal, o.grand_total, o.total_paid, o.remaining_balance
+    from public.orders o
+    where not exists (select 1 from public.order_financials f where f.order_id = o.id);
+  end if;
+end $$;
 
 -- Re-point the two views that read these columns at order_financials
 -- BEFORE dropping the columns below — otherwise Postgres refuses the
@@ -67,29 +87,32 @@ join public.order_financials f on f.order_id = o.id
 left join public.expenses e on e.order_id = o.id
 group by o.id, o.order_number, f.grand_total, f.total_paid, f.remaining_balance;
 
-alter table public.orders
-  drop column discount,
-  drop column shipping_cost,
-  drop column subtotal,
-  drop column grand_total,
-  drop column total_paid,
-  drop column remaining_balance;
+alter table public.orders drop column if exists discount;
+alter table public.orders drop column if exists shipping_cost;
+alter table public.orders drop column if exists subtotal;
+alter table public.orders drop column if exists grand_total;
+alter table public.orders drop column if exists total_paid;
+alter table public.orders drop column if exists remaining_balance;
 
 -- auto-create a zeroed financials row whenever an order is created
 create or replace function public.fn_create_order_financials()
 returns trigger language plpgsql as $$
 begin
-  insert into public.order_financials (order_id) values (new.id);
+  insert into public.order_financials (order_id)
+  values (new.id)
+  on conflict (order_id) do nothing;
   return null;
 end;
 $$;
 
+drop trigger if exists trg_orders_create_financials on public.orders;
 create trigger trg_orders_create_financials
 after insert on public.orders
 for each row execute function public.fn_create_order_financials();
 
 alter table public.order_financials enable row level security;
 
+drop policy if exists "order_financials_select" on public.order_financials;
 create policy "order_financials_select"
 on public.order_financials for select
 using (
@@ -103,6 +126,7 @@ using (
 -- recomputed from source data on every write regardless of what's
 -- sent (same pattern as the Phase 8 audit fix), so this broad grant
 -- can't be used to falsify a total.
+drop policy if exists "order_financials_update" on public.order_financials;
 create policy "order_financials_update"
 on public.order_financials for update
 using (public.fn_is_admin() or public.fn_my_role() = 'order_manager')
@@ -168,7 +192,7 @@ end;
 $$;
 
 drop trigger if exists trg_orders_money_recalc on public.orders;
-
+drop trigger if exists trg_order_financials_recalc on public.order_financials;
 create trigger trg_order_financials_recalc
 before insert or update on public.order_financials
 for each row execute function public.fn_financials_recalc();
@@ -209,6 +233,7 @@ begin
 end;
 $$;
 
+drop trigger if exists trg_orders_default_due_date on public.orders;
 create trigger trg_orders_default_due_date
 before insert on public.orders
 for each row execute function public.fn_default_due_date();
@@ -217,25 +242,34 @@ for each row execute function public.fn_default_due_date();
 -- PART C — File links (a URL instead of an uploaded file).
 -- ------------------------------------------------------------
 alter table public.files alter column storage_path drop not null;
-alter table public.files add column link_url text;
-alter table public.files add constraint files_storage_or_link
-  check (storage_path is not null or link_url is not null);
+alter table public.files add column if not exists link_url text;
+
+do $$
+begin
+  if not exists (select 1 from pg_constraint where conname = 'files_storage_or_link') then
+    alter table public.files add constraint files_storage_or_link
+      check (storage_path is not null or link_url is not null);
+  end if;
+end $$;
 
 -- ------------------------------------------------------------
 -- PART D — "Collected" stage, after "Delivered".
 -- ------------------------------------------------------------
-insert into public.workflow_stages (code, label_ar, sort_order) values
-  ('COLLECTED', 'تم التحصيل', 8);
+insert into public.workflow_stages (code, label_ar, sort_order)
+values ('COLLECTED', 'تم التحصيل', 8)
+on conflict (code) do nothing;
+
 update public.workflow_stages set sort_order = 9 where code = 'CANCELLED';
 
-insert into public.workflow_transitions (from_stage, to_stage) values
-  ('DELIVERED', 'COLLECTED');
+insert into public.workflow_transitions (from_stage, to_stage)
+values ('DELIVERED', 'COLLECTED')
+on conflict (from_stage, to_stage) do nothing;
 
 -- ------------------------------------------------------------
 -- PART E — Per-item progress checklist (designer/printing/etc tick
 -- off each item individually at their stage).
 -- ------------------------------------------------------------
-create table public.item_progress (
+create table if not exists public.item_progress (
   id             uuid primary key default gen_random_uuid(),
   order_item_id  uuid not null references public.order_items(id) on delete cascade,
   stage          text not null references public.workflow_stages(code),
@@ -245,10 +279,11 @@ create table public.item_progress (
   unique (order_item_id, stage)
 );
 
-create index idx_item_progress_order_item_id on public.item_progress(order_item_id);
+create index if not exists idx_item_progress_order_item_id on public.item_progress(order_item_id);
 
 alter table public.item_progress enable row level security;
 
+drop policy if exists "item_progress_select_via_order" on public.item_progress;
 create policy "item_progress_select_via_order"
 on public.item_progress for select
 using (
@@ -383,3 +418,15 @@ grant execute on function public.fn_advance_stage(uuid, text, uuid) to authentic
 -- forward for general business expenses. Existing per-order rows,
 -- if any, are left as-is (harmless, just no longer shown per-order).
 -- ------------------------------------------------------------
+
+-- ------------------------------------------------------------
+-- VERIFICATION — run this after the migration to confirm it
+-- landed correctly. Expect: has_order_financials_table = true,
+-- orders_still_has_money_columns = false, financials_row_count
+-- roughly equal to your total order count.
+-- ------------------------------------------------------------
+select
+  exists (select 1 from information_schema.tables where table_schema='public' and table_name='order_financials') as has_order_financials_table,
+  exists (select 1 from information_schema.columns where table_schema='public' and table_name='orders' and column_name='grand_total') as orders_still_has_money_columns,
+  (select count(*) from public.order_financials) as financials_row_count,
+  (select count(*) from public.orders) as orders_row_count;
