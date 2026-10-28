@@ -105,7 +105,7 @@ export function OrderPayments({
 
       <form onSubmit={handleSubmit} className="flex flex-wrap gap-2 mb-3">
         <input
-          type="number" min={0} step="0.01" placeholder="المبلغ"
+          type="number" onFocus={(e) => e.target.select()} min={0} step="0.01" placeholder="المبلغ"
           value={amount} onChange={(e) => setAmount(e.target.value)}
           className="w-28 rounded-lg border border-gray-300 px-2 py-1.5 text-sm"
         />
@@ -139,7 +139,7 @@ export function OrderPayments({
               {editingId === p.id ? (
                 <div className="flex items-center gap-2 flex-1">
                   <input
-                    type="number" min={0} step="0.01" value={editAmount}
+                    type="number" onFocus={(e) => e.target.select()} min={0} step="0.01" value={editAmount}
                     onChange={(e) => setEditAmount(e.target.value)}
                     className="w-24 rounded-lg border border-gray-300 px-2 py-1 text-sm"
                   />

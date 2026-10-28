@@ -128,7 +128,7 @@ export default function Expenses() {
       <form onSubmit={handleAdd} className="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 mb-4">
         <div className="flex flex-wrap gap-2 mb-2">
           <input placeholder="الفئة (طباعة، مواد خام...)" value={category} onChange={(e) => setCategory(e.target.value)} className="rounded-lg border border-gray-300 px-2 py-1.5 text-sm" />
-          <input type="number" min={0} step="0.01" placeholder="المبلغ" value={amount} onChange={(e) => setAmount(e.target.value)} className="w-28 rounded-lg border border-gray-300 px-2 py-1.5 text-sm" />
+          <input type="number" onFocus={(e) => e.target.select()} min={0} step="0.01" placeholder="المبلغ" value={amount} onChange={(e) => setAmount(e.target.value)} className="w-28 rounded-lg border border-gray-300 px-2 py-1.5 text-sm" />
           <select value={method} onChange={(e) => setMethod(e.target.value as PaymentMethod)} className="rounded-lg border border-gray-300 px-2 py-1.5 text-sm">
             <option value="CASH">نقدًا</option>
             <option value="INSTAPAY">إنستاباي</option>

@@ -189,17 +189,21 @@ export default function OrderDetail() {
                 >
                   نقل إلى: {STAGE_LABEL_AR[s]}
                 </button>
-                {isAdminOrOM && (stageEmployees[s]?.length || 0) > 0 && (
-                  <select
-                    value={assignPick[s] || ""}
-                    onChange={(e) => setAssignPick((prev) => ({ ...prev, [s]: e.target.value }))}
-                    className="text-sm border border-gray-300 rounded-lg px-2 py-1.5"
-                  >
-                    <option value="">القائمة العامة (استلام ذاتي)</option>
-                    {stageEmployees[s].map((emp) => (
-                      <option key={emp.id} value={emp.id}>تعيين مباشر لـ {emp.full_name}</option>
-                    ))}
-                  </select>
+                {isAdminOrOM && (
+                  (stageEmployees[s]?.length || 0) > 0 ? (
+                    <select
+                      value={assignPick[s] || ""}
+                      onChange={(e) => setAssignPick((prev) => ({ ...prev, [s]: e.target.value }))}
+                      className="text-sm border border-gray-300 rounded-lg px-2 py-1.5"
+                    >
+                      <option value="">القائمة العامة (استلام ذاتي)</option>
+                      {stageEmployees[s].map((emp) => (
+                        <option key={emp.id} value={emp.id}>تعيين مباشر لـ {emp.full_name}</option>
+                      ))}
+                    </select>
+                  ) : stageEmployees[s] ? (
+                    <span className="text-xs text-gray-400">لا يوجد موظفون نشطون بدور هذه المرحلة بعد</span>
+                  ) : null
                 )}
               </div>
             ))}
@@ -409,11 +413,11 @@ function OrderEditPanel({ order, items, onSaved }: { order: Order; items: OrderI
           <>
             <label className="block">
               <span className="block text-sm text-gray-700 mb-1">الخصم</span>
-              <input type="number" min={0} step="0.01" value={discount} onChange={(e) => setDiscount(Number(e.target.value))} className="w-full rounded-lg border border-gray-300 px-3 py-2" />
+              <input type="number" onFocus={(e) => e.target.select()} min={0} step="0.01" value={discount} onChange={(e) => setDiscount(Number(e.target.value))} className="w-full rounded-lg border border-gray-300 px-3 py-2" />
             </label>
             <label className="block">
               <span className="block text-sm text-gray-700 mb-1">تكلفة الشحن</span>
-              <input type="number" min={0} step="0.01" value={shippingCost} onChange={(e) => setShippingCost(Number(e.target.value))} className="w-full rounded-lg border border-gray-300 px-3 py-2" />
+              <input type="number" onFocus={(e) => e.target.select()} min={0} step="0.01" value={shippingCost} onChange={(e) => setShippingCost(Number(e.target.value))} className="w-full rounded-lg border border-gray-300 px-3 py-2" />
             </label>
           </>
         )}
@@ -429,9 +433,9 @@ function OrderEditPanel({ order, items, onSaved }: { order: Order; items: OrderI
             <div key={it.id} className="grid grid-cols-2 sm:grid-cols-5 gap-2 items-center">
               <input value={it.name} onChange={(e) => updateExisting(it.id, { name: e.target.value })} className="sm:col-span-2 rounded-lg border border-gray-300 px-2 py-1.5 text-sm" />
               <input value={it.size || ""} onChange={(e) => updateExisting(it.id, { size: e.target.value })} className="rounded-lg border border-gray-300 px-2 py-1.5 text-sm" />
-              <input type="number" min={1} value={it.quantity} onChange={(e) => updateExisting(it.id, { quantity: Number(e.target.value) })} className="rounded-lg border border-gray-300 px-2 py-1.5 text-sm" />
+              <input type="number" onFocus={(e) => e.target.select()} min={1} value={it.quantity} onChange={(e) => updateExisting(it.id, { quantity: Number(e.target.value) })} className="rounded-lg border border-gray-300 px-2 py-1.5 text-sm" />
               <div className="flex gap-1">
-                <input type="number" min={0} step="0.01" value={it.unit_price} onChange={(e) => updateExisting(it.id, { unit_price: Number(e.target.value) })} className="w-full rounded-lg border border-gray-300 px-2 py-1.5 text-sm" />
+                <input type="number" onFocus={(e) => e.target.select()} min={0} step="0.01" value={it.unit_price} onChange={(e) => updateExisting(it.id, { unit_price: Number(e.target.value) })} className="w-full rounded-lg border border-gray-300 px-2 py-1.5 text-sm" />
                 <button type="button" onClick={() => removeExisting(it.id)} className="text-red-600 text-sm px-2">✕</button>
               </div>
             </div>
@@ -440,8 +444,8 @@ function OrderEditPanel({ order, items, onSaved }: { order: Order; items: OrderI
             <div key={`new-${i}`} className="grid grid-cols-2 sm:grid-cols-5 gap-2 items-center">
               <input placeholder="اسم المنتج" value={ni.name} onChange={(e) => setNewItems((prev) => prev.map((x, idx) => (idx === i ? { ...x, name: e.target.value } : x)))} className="sm:col-span-2 rounded-lg border border-gray-300 px-2 py-1.5 text-sm" />
               <input placeholder="المقاس" value={ni.size} onChange={(e) => setNewItems((prev) => prev.map((x, idx) => (idx === i ? { ...x, size: e.target.value } : x)))} className="rounded-lg border border-gray-300 px-2 py-1.5 text-sm" />
-              <input type="number" min={1} placeholder="الكمية" value={ni.quantity} onChange={(e) => setNewItems((prev) => prev.map((x, idx) => (idx === i ? { ...x, quantity: Number(e.target.value) } : x)))} className="rounded-lg border border-gray-300 px-2 py-1.5 text-sm" />
-              <input type="number" min={0} step="0.01" placeholder="سعر الوحدة" value={ni.unit_price} onChange={(e) => setNewItems((prev) => prev.map((x, idx) => (idx === i ? { ...x, unit_price: Number(e.target.value) } : x)))} className="rounded-lg border border-gray-300 px-2 py-1.5 text-sm" />
+              <input type="number" onFocus={(e) => e.target.select()} min={1} placeholder="الكمية" value={ni.quantity} onChange={(e) => setNewItems((prev) => prev.map((x, idx) => (idx === i ? { ...x, quantity: Number(e.target.value) } : x)))} className="rounded-lg border border-gray-300 px-2 py-1.5 text-sm" />
+              <input type="number" onFocus={(e) => e.target.select()} min={0} step="0.01" placeholder="سعر الوحدة" value={ni.unit_price} onChange={(e) => setNewItems((prev) => prev.map((x, idx) => (idx === i ? { ...x, unit_price: Number(e.target.value) } : x)))} className="rounded-lg border border-gray-300 px-2 py-1.5 text-sm" />
             </div>
           ))}
         </div>

@@ -173,9 +173,9 @@ export default function OrderNew() {
               <div key={i} className="grid grid-cols-1 sm:grid-cols-5 gap-2 border-b border-gray-50 pb-3 last:border-0">
                 <input placeholder="اسم المنتج" required value={item.name} onChange={(e) => updateItem(i, { name: e.target.value })} className="sm:col-span-2 rounded-lg border border-gray-300 px-2 py-1.5 text-sm" />
                 <input placeholder="المقاس" value={item.size} onChange={(e) => updateItem(i, { size: e.target.value })} className="rounded-lg border border-gray-300 px-2 py-1.5 text-sm" />
-                <input type="number" min={1} placeholder="الكمية" value={item.quantity} onChange={(e) => updateItem(i, { quantity: Number(e.target.value) })} className="rounded-lg border border-gray-300 px-2 py-1.5 text-sm" />
+                <input type="number" onFocus={(e) => e.target.select()} min={1} placeholder="الكمية" value={item.quantity} onChange={(e) => updateItem(i, { quantity: Number(e.target.value) })} className="rounded-lg border border-gray-300 px-2 py-1.5 text-sm" />
                 <div className="flex gap-1">
-                  <input type="number" min={0} step="0.01" placeholder="سعر الوحدة" value={item.unit_price} onChange={(e) => updateItem(i, { unit_price: Number(e.target.value) })} className="w-full rounded-lg border border-gray-300 px-2 py-1.5 text-sm" />
+                  <input type="number" onFocus={(e) => e.target.select()} min={0} step="0.01" placeholder="سعر الوحدة" value={item.unit_price} onChange={(e) => updateItem(i, { unit_price: Number(e.target.value) })} className="w-full rounded-lg border border-gray-300 px-2 py-1.5 text-sm" />
                   {items.length > 1 && (
                     <button type="button" onClick={() => removeItem(i)} className="text-red-600 text-sm px-2">✕</button>
                   )}
@@ -188,11 +188,11 @@ export default function OrderNew() {
         <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm grid gap-3 sm:grid-cols-2">
           <label className="block">
             <span className="block text-sm text-gray-700 mb-1">الخصم</span>
-            <input type="number" min={0} step="0.01" value={discount} onChange={(e) => setDiscount(Number(e.target.value))} className="w-full rounded-lg border border-gray-300 px-3 py-2" />
+            <input type="number" onFocus={(e) => e.target.select()} min={0} step="0.01" value={discount} onChange={(e) => setDiscount(Number(e.target.value))} className="w-full rounded-lg border border-gray-300 px-3 py-2" />
           </label>
           <label className="block">
             <span className="block text-sm text-gray-700 mb-1">تكلفة الشحن</span>
-            <input type="number" min={0} step="0.01" value={shippingCost} onChange={(e) => setShippingCost(Number(e.target.value))} className="w-full rounded-lg border border-gray-300 px-3 py-2" />
+            <input type="number" onFocus={(e) => e.target.select()} min={0} step="0.01" value={shippingCost} onChange={(e) => setShippingCost(Number(e.target.value))} className="w-full rounded-lg border border-gray-300 px-3 py-2" />
           </label>
           <label className="block sm:col-span-2">
             <span className="block text-sm text-gray-700 mb-1">ملاحظات</span>
