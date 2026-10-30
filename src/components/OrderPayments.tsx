@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { listPayments, addPayment, updatePayment, deletePayment } from "../services/paymentsService";
 import { useAuth } from "../hooks/useAuth";
+import { describeError } from "../lib/errors";
 import type { Payment, PaymentMethod } from "../types/database";
 
 const METHOD_AR: Record<PaymentMethod, string> = {
@@ -84,8 +85,9 @@ export function OrderPayments({
       setEditingId(null);
       await load();
       onPaymentAdded?.();
-    } catch {
-      setError("تعذر تعديل الدفعة.");
+    } catch (err) {
+      console.error("Edit payment failed:", err);
+      setError(`تعذر تعديل الدفعة. ${describeError(err)}`);
     }
   }
 
@@ -94,8 +96,9 @@ export function OrderPayments({
       await deletePayment(id);
       await load();
       onPaymentAdded?.();
-    } catch {
-      setError("تعذر حذف الدفعة.");
+    } catch (err) {
+      console.error("Delete payment failed:", err);
+      setError(`تعذر حذف الدفعة. ${describeError(err)}`);
     }
   }
 

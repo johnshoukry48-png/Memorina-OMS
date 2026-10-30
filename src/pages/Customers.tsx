@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { listCustomers, createCustomer } from "../services/customersService";
+import { describeError } from "../lib/errors";
 import type { Customer } from "../types/database";
 
 export default function Customers() {
@@ -40,7 +41,8 @@ export default function Customers() {
       setShowForm(false);
       load();
     } catch (err: any) {
-      setError("تعذر إضافة العميل. تحقق من البيانات وحاول مرة أخرى.");
+      console.error("Create customer failed:", err);
+      setError(`تعذر إضافة العميل. ${describeError(err)}`);
     } finally {
       setSaving(false);
     }

@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { listFiles, uploadFile, getFileDownloadUrl, addFileLink } from "../services/filesService";
 import type { OrderFile, FileCategory } from "../types/database";
 import { useAuth } from "../hooks/useAuth";
+import { describeError } from "../lib/errors";
 
 const CATEGORY_AR: Record<FileCategory, string> = {
   CUSTOMER_REFERENCE: "مرجع من العميل",
@@ -59,8 +60,9 @@ export function OrderFiles({ orderId }: { orderId: string }) {
       await uploadFile(orderId, category, file);
       if (inputRef.current) inputRef.current.value = "";
       await load();
-    } catch {
-      setError("تعذر رفع الملف — تأكد أن نوع الملف مسموح لدورك الوظيفي.");
+    } catch (err) {
+      console.error("File upload failed:", err);
+      setError(`تعذر رفع الملف. ${describeError(err)}`);
     } finally {
       setUploading(false);
     }
@@ -76,8 +78,9 @@ export function OrderFiles({ orderId }: { orderId: string }) {
       setLinkUrl("");
       setLinkLabel("");
       await load();
-    } catch {
-      setError("تعذر إضافة الرابط — تأكد أن هذه الفئة مسموحة لدورك الوظيفي.");
+    } catch (err) {
+      console.error("Add link failed:", err);
+      setError(`تعذر إضافة الرابط. ${describeError(err)}`);
     } finally {
       setSavingLink(false);
     }

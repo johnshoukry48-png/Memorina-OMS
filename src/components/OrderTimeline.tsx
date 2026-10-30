@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { listAuditLogs } from "../services/auditService";
 import { listComments, addComment } from "../services/commentsService";
 import type { AuditLog, Comment } from "../types/database";
+import { describeError } from "../lib/errors";
 
 const ACTION_LABEL_AR: Record<string, (log: AuditLog) => string> = {
   order_created: () => "تم إنشاء الطلب",
@@ -56,8 +57,9 @@ export function OrderTimeline({ orderId }: { orderId: string }) {
       await addComment(orderId, message.trim());
       setMessage("");
       await load();
-    } catch {
-      setError("تعذر إرسال التعليق.");
+    } catch (err) {
+      console.error("Add comment failed:", err);
+      setError(`تعذر إرسال التعليق. ${describeError(err)}`);
     } finally {
       setPosting(false);
     }

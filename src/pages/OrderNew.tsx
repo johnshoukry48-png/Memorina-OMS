@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { listCustomers, createCustomer } from "../services/customersService";
 import { createOrderWithItems } from "../services/ordersService";
+import { describeError } from "../lib/errors";
 import type { Customer, NewOrderItemInput } from "../types/database";
 
 const emptyItem: NewOrderItemInput = { name: "", quantity: 1, unit_price: 0, size: "" };
@@ -82,7 +83,8 @@ export default function OrderNew() {
       });
       navigate(`/orders/${order.id}`);
     } catch (err) {
-      setError("تعذر إنشاء الطلب. تحقق من البيانات وحاول مرة أخرى.");
+      console.error("Order creation failed:", err);
+      setError(`تعذر إنشاء الطلب. ${describeError(err)}`);
     } finally {
       setSaving(false);
     }

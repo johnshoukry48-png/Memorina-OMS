@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { listMyStageOrders, claimTask } from "../services/ordersService";
 import { useAuth } from "../hooks/useAuth";
 import type { Order } from "../types/database";
+import { describeError } from "../lib/errors";
 import { StatusBadge } from "../components/StatusBadge";
 
 export default function MyTasks() {
@@ -32,7 +33,7 @@ export default function MyTasks() {
       await claimTask(orderId);
       load();
     } catch (err: any) {
-      setError(err?.message || "تعذر استلام المهمة، حاول مرة أخرى.");
+      setError(describeError(err));
     } finally {
       setClaimingId(null);
     }

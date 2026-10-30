@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { listExpensesInRange, addExpense, deleteExpense } from "../services/expensesService";
+import { describeError } from "../lib/errors";
 import type { Expense, PaymentMethod } from "../types/database";
 
 const METHOD_AR: Record<PaymentMethod, string> = {
@@ -70,8 +71,9 @@ export default function Expenses() {
       setAmount("");
       setDescription("");
       await load();
-    } catch {
-      setError("تعذر تسجيل المصروف.");
+    } catch (err) {
+      console.error("Add expense failed:", err);
+      setError(`تعذر تسجيل المصروف. ${describeError(err)}`);
     } finally {
       setSaving(false);
     }
@@ -81,8 +83,9 @@ export default function Expenses() {
     try {
       await deleteExpense(id);
       await load();
-    } catch {
-      setError("تعذر حذف المصروف.");
+    } catch (err) {
+      console.error("Delete expense failed:", err);
+      setError(`تعذر حذف المصروف. ${describeError(err)}`);
     }
   }
 

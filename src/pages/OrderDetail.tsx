@@ -12,6 +12,7 @@ import { StatusBadge } from "../components/StatusBadge";
 import { OrderFiles } from "../components/OrderFiles";
 import { OrderPayments } from "../components/OrderPayments";
 import { OrderTimeline } from "../components/OrderTimeline";
+import { describeError } from "../lib/errors";
 
 const STAGE_LABEL_AR: Record<WorkflowStageCode, string> = {
   NEW: "جديد", DESIGN: "التصميم", PRINTING: "الطباعة", ASSEMBLY: "التجميع",
@@ -94,7 +95,7 @@ export default function OrderDetail() {
       await claimTask(id);
       await load();
     } catch (err: any) {
-      setActionError(err?.message || "تعذر استلام المهمة.");
+      setActionError(describeError(err));
     } finally {
       setActing(false);
     }
@@ -108,7 +109,7 @@ export default function OrderDetail() {
       await advanceStage(id, toStage, assignPick[toStage] || null);
       await load();
     } catch (err: any) {
-      setActionError(err?.message || "تعذر نقل الطلب لهذه المرحلة.");
+      setActionError(describeError(err));
     } finally {
       setActing(false);
     }
@@ -123,7 +124,7 @@ export default function OrderDetail() {
         return [...others, { id: "", order_item_id: itemId, stage: order.current_stage, completed, completed_by: null, completed_at: null }];
       });
     } catch (err: any) {
-      setActionError(err?.message || "تعذر تحديث حالة العنصر.");
+      setActionError(describeError(err));
     }
   }
 
@@ -376,7 +377,7 @@ function OrderEditPanel({ order, items, onSaved }: { order: Order; items: OrderI
       }
       onSaved();
     } catch (err: any) {
-      setError(err?.message || "تعذر حفظ التعديلات.");
+      setError(describeError(err));
     } finally {
       setSaving(false);
     }
