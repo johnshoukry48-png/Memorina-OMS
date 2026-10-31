@@ -8,6 +8,7 @@ const ACTION_LABEL_AR: Record<string, (log: AuditLog) => string> = {
   order_created: () => "تم إنشاء الطلب",
   stage_changed: (l) => `تم نقل الطلب إلى مرحلة ${STAGE_AR[l.to_value || ""] || l.to_value}`,
   task_claimed: () => "تم استلام المهمة",
+  task_assigned: (l) => `تم تعيين المهمة إلى ${l.to_value || ""}`,
   file_uploaded: (l) => `تم رفع ملف (${CATEGORY_AR[l.to_value || ""] || l.to_value})`,
   payment_recorded: (l) => `تم تسجيل دفعة (${l.to_value})`,
 };

@@ -31,6 +31,11 @@ const STAGE_TO_ROLE: Partial<Record<WorkflowStageCode, string>> = {
   SHIPPING: "shipping",
 };
 
+const ROLE_LABEL_AR: Record<string, string> = {
+  designer: "التصميم", printing: "الطباعة", assembly: "التجميع",
+  packaging: "التغليف", shipping: "الشحن",
+};
+
 function formatDuration(fromIso: string, toIso: string | null) {
   const from = new Date(fromIso).getTime();
   const to = toIso ? new Date(toIso).getTime() : Date.now();
@@ -52,6 +57,7 @@ export default function OrderDetail() {
   const [nextStages, setNextStages] = useState<WorkflowStageCode[]>([]);
   const [stageEmployees, setStageEmployees] = useState<Record<string, { id: string; full_name: string }[]>>({});
   const [assignPick, setAssignPick] = useState<Record<string, string>>({});
+  const [stageEmployeesError, setStageEmployeesError] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [acting, setActing] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -77,15 +83,23 @@ export default function OrderDetail() {
   const canSeeMoney = !!order?.financials; // null for roles RLS hides it from
   const forwardStages = nextStages.filter((s) => s !== "CANCELLED");
 
+  // Load the people who work at each possible next stage. This must depend
+  // on the next-stages list itself (not just the current stage): that list
+  // arrives a moment after the order does, and depending only on the order
+  // meant this ran too early, found nothing to load, and never ran again.
+  const forwardKey = forwardStages.join(",");
   useEffect(() => {
     if (!isAdminOrOM || forwardStages.length === 0) return;
     forwardStages.forEach((s) => {
-      if (!stageEmployees[s]) {
-        listEmployeesForStage(s).then((list) => setStageEmployees((prev) => ({ ...prev, [s]: list })));
-      }
+      listEmployeesForStage(s)
+        .then((list) => setStageEmployees((prev) => ({ ...prev, [s]: list })))
+        .catch((err) => {
+          console.error("Loading stage employees failed:", err);
+          setStageEmployeesError((prev) => ({ ...prev, [s]: describeError(err) }));
+        });
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAdminOrOM, order?.current_stage]);
+  }, [isAdminOrOM, forwardKey]);
 
   async function handleClaim() {
     if (!id) return;
@@ -182,30 +196,43 @@ export default function OrderDetail() {
         ) : canAdvance ? (
           <div className="space-y-2">
             {forwardStages.map((s) => (
-              <div key={s} className="flex flex-wrap items-center gap-2">
+              <div key={s} className="border border-gray-100 rounded-xl p-3 bg-gray-50/60">
+                <p className="text-sm font-semibold mb-2">نقل الطلب إلى: {STAGE_LABEL_AR[s]}</p>
+
+                {isAdminOrOM && (
+                  <div className="mb-2">
+                    <label className="block text-xs text-gray-500 mb-1">مين يستلمه؟</label>
+                    {stageEmployeesError[s] ? (
+                      <p className="text-xs text-red-600">تعذر تحميل الموظفين: {stageEmployeesError[s]}</p>
+                    ) : !stageEmployees[s] ? (
+                      <p className="text-xs text-gray-400">جارٍ تحميل الموظفين...</p>
+                    ) : (
+                      <>
+                        <select
+                          value={assignPick[s] || ""}
+                          onChange={(e) => setAssignPick((prev) => ({ ...prev, [s]: e.target.value }))}
+                          className="w-full text-sm border border-gray-300 rounded-lg px-2 py-2 bg-white"
+                        >
+                          <option value="">للقسم كله — أي حد من القسم يستلمه</option>
+                          {stageEmployees[s].map((emp) => (
+                            <option key={emp.id} value={emp.id}>تحويل مباشر لـ {emp.full_name}</option>
+                          ))}
+                        </select>
+                        {stageEmployees[s].length === 0 && (
+                          <p className="text-xs text-gray-400 mt-1">لا يوجد موظفون نشطون في هذا القسم حاليًا — الطلب هيروح لقايمة القسم.</p>
+                        )}
+                      </>
+                    )}
+                  </div>
+                )}
+
                 <button
                   onClick={() => handleAdvance(s)}
                   disabled={acting}
                   className="bg-memorina-teal text-white rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-50"
                 >
-                  نقل إلى: {STAGE_LABEL_AR[s]}
+                  {acting ? "جارٍ النقل..." : assignPick[s] ? "تأكيد التحويل للشخص" : "تأكيد النقل للقسم"}
                 </button>
-                {isAdminOrOM && (
-                  (stageEmployees[s]?.length || 0) > 0 ? (
-                    <select
-                      value={assignPick[s] || ""}
-                      onChange={(e) => setAssignPick((prev) => ({ ...prev, [s]: e.target.value }))}
-                      className="text-sm border border-gray-300 rounded-lg px-2 py-1.5"
-                    >
-                      <option value="">القائمة العامة (استلام ذاتي)</option>
-                      {stageEmployees[s].map((emp) => (
-                        <option key={emp.id} value={emp.id}>تعيين مباشر لـ {emp.full_name}</option>
-                      ))}
-                    </select>
-                  ) : stageEmployees[s] ? (
-                    <span className="text-xs text-gray-400">لا يوجد موظفون نشطون بدور هذه المرحلة بعد</span>
-                  ) : null
-                )}
               </div>
             ))}
             {canCancel && (
@@ -294,7 +321,7 @@ export default function OrderDetail() {
             <ul className="divide-y divide-gray-50 text-sm">
               {assignments.map((a) => (
                 <li key={a.id} className="py-2 flex items-center justify-between">
-                  <span>{a.user?.full_name} — {STAGE_LABEL_AR[a.role_at_assignment as WorkflowStageCode] || a.role_at_assignment}</span>
+                  <span>{a.user?.full_name} — {ROLE_LABEL_AR[a.role_at_assignment] || a.role_at_assignment}</span>
                   <span className="text-gray-500">
                     {formatDuration(a.claimed_at, a.released_at)}{!a.released_at && " (لسه شغال)"}
                   </span>
