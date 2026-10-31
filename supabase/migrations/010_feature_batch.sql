@@ -96,7 +96,7 @@ alter table public.orders drop column if exists remaining_balance;
 
 -- auto-create a zeroed financials row whenever an order is created
 create or replace function public.fn_create_order_financials()
-returns trigger language plpgsql as $$
+returns trigger language plpgsql security definer set search_path = public as $$
 begin
   insert into public.order_financials (order_id)
   values (new.id)
@@ -134,7 +134,7 @@ with check (public.fn_is_admin() or public.fn_my_role() = 'order_manager');
 
 -- recompute logic now targets order_financials instead of orders
 create or replace function public.fn_recompute_order_totals(p_order_id uuid)
-returns void language plpgsql as $$
+returns void language plpgsql security definer set search_path = public as $$
 declare
   v_subtotal numeric(12,2);
 begin
@@ -150,7 +150,7 @@ end;
 $$;
 
 create or replace function public.fn_recompute_order_payment(p_order_id uuid)
-returns void language plpgsql as $$
+returns void language plpgsql security definer set search_path = public as $$
 declare
   v_total_paid numeric(12,2);
 begin
